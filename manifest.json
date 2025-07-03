@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Cookie & Tracker Viewer",
+  "version": "1.0",
+  "description": "View cookies and trackers for visited websites.",
+  "permissions": [
+    "cookies",
+    "tabs",
+    "storage",
+    "webRequest"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
