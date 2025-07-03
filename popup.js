@@ -1,15 +1,14 @@
-
 // document.addEventListener("DOMContentLoaded", () => {
 //   const siteList = document.getElementById("site-list");
-//     console.log("Loading popup...");
-//     chrome.storage.local.get("visitedSites", (data) => {
-//   console.log("Visited Sites in popup:", data);
-// });
-//   chrome.storage.local.get("visitedSites", (data) => {
-//     const visitedSites = data.visitedSites || {};
+
+//   chrome.storage.local.get("visitedSites", (result) => {
+//     console.log("VisitedSites data from storage:", result);
+
+//     const visitedSites = result.visitedSites || {};
+//     siteList.innerHTML = ""; 
 
 //     if (Object.keys(visitedSites).length === 0) {
-//       siteList.innerText = "No sites visited yet.";
+//       siteList.textContent = "No data available.";
 //       return;
 //     }
 
@@ -20,21 +19,23 @@
 //       const header = document.createElement("div");
 //       header.className = "domain-header";
 //       header.textContent = domain;
-//       header.onclick = () => {
-//         content.classList.toggle("hidden");
-//       };
+//       header.onclick = () => content.classList.toggle("hidden");
 
 //       const content = document.createElement("div");
 //       content.className = "domain-content hidden";
 
-//       const pages = document.createElement("div");
-//       pages.innerHTML = "<strong>Visited Pages:</strong><ul>" +
-//         info.pages.map(url => `<li>${url}</li>`).join("") +
-//         "</ul>";
+//     const pages = document.createElement("div");
+//     pages.innerHTML = "<strong>Visited Pages:</strong><ul>" +
+//     (info.pages || []).map(page =>
+//         `<li>${page.url}<br/><small>Last visited: ${new Date(page.lastVisited).toLocaleString()}</small></li>`
+//     ).join("") +
+//     "</ul>";
 
 //       const cookies = document.createElement("div");
+//       const cookieList = info.cookies || [];
+
 //       cookies.innerHTML = "<strong>Cookies:</strong><ul>" +
-//         (info.cookies || []).map(c => `<li>${c.name} = ${c.value}</li>`).join("") +
+//         cookieList.map(c => `<li>${c.name} = ${c.value}</li>`).join("") +
 //         "</ul>";
 
 //       content.appendChild(pages);
@@ -48,55 +49,82 @@
 // });
 
 
+
+
 document.addEventListener("DOMContentLoaded", () => {
   const siteList = document.getElementById("site-list");
 
-  chrome.storage.local.get("visitedSites", (data) => {
-    console.log("Visited Sites in popup:", data);
-
-    const visitedSites = data.visitedSites || {};
-
-    siteList.innerHTML = ""; // clear "Loading..."
+  chrome.storage.local.get("visitedSites", (result) => {
+    const visitedSites = result.visitedSites || {};
+    siteList.innerHTML = "";
 
     if (Object.keys(visitedSites).length === 0) {
-      siteList.innerText = "No sites visited yet.";
+      siteList.textContent = "No data available.";
       return;
     }
 
-    const sortedDomains = Object.keys(visitedSites).sort();
-
-    for (const domain of sortedDomains) {
-      const info = visitedSites[domain];
-
+    for (const [domain, info] of Object.entries(visitedSites)) {
       const domainBlock = document.createElement("div");
       domainBlock.className = "domain-block";
 
       const header = document.createElement("div");
       header.className = "domain-header";
       header.textContent = domain;
-      header.onclick = () => content.classList.toggle("hidden");
 
       const content = document.createElement("div");
       content.className = "domain-content hidden";
 
-      const pages = document.createElement("div");
-      pages.innerHTML = "<strong>Visited Pages:</strong><ul>" +
-        (info.pages || []).map(url => `<li>${url}</li>`).join("") +
+      header.addEventListener("click", () => {
+        content.classList.toggle("hidden");
+      });
+
+      // Visited Pages Section
+      const pagesWrapper = document.createElement("div");
+      pagesWrapper.className = "sub-section";
+
+      const pagesHeader = document.createElement("div");
+      pagesHeader.className = "sub-header";
+      pagesHeader.textContent = "▶ Visited Pages";
+
+      const pagesContent = document.createElement("div");
+      pagesContent.classList.add("hidden");
+
+      pagesContent.innerHTML = "<ul>" +
+        (info.pages || []).map(page =>
+          `<li>${page.url}<br/><small>Last visited: ${new Date(page.lastVisited).toLocaleString()}</small></li>`
+        ).join("") +
         "</ul>";
 
-      const cookies = document.createElement("div");
-      const cookieList = info.cookies || [];
+      pagesHeader.addEventListener("click", () => {
+        pagesContent.classList.toggle("hidden");
+        pagesHeader.textContent = pagesContent.classList.contains("hidden")
+          ? "▶ Visited Pages"
+          : "▼ Visited Pages";
+      });
 
-      if (cookieList.length === 0) {
-        cookies.innerHTML = "<strong>Cookies:</strong><p><em>No accessible cookies.</em></p>";
-      } else {
-        cookies.innerHTML = "<strong>Cookies:</strong><ul>" +
-          cookieList.map(c => `<li>${c.name} = ${c.value}</li>`).join("") +
-          "</ul>";
-      }
+      pagesWrapper.appendChild(pagesHeader);
+      pagesWrapper.appendChild(pagesContent);
 
-      content.appendChild(pages);
-      content.appendChild(cookies);
+      // Cookies Section
+      const cookiesWrapper = document.createElement("div");
+      cookiesWrapper.className = "sub-section";
+
+      const cookiesHeader = document.createElement("div");
+      cookiesHeader.className = "sub-header";
+      cookiesHeader.textContent = "Cookies:";
+
+      const cookiesContent = document.createElement("div");
+      cookiesContent.innerHTML = "<ul>" +
+        (info.cookies || []).map(c =>
+          `<li>${c.name} = ${c.value}</li>`
+        ).join("") +
+        "</ul>";
+
+      cookiesWrapper.appendChild(cookiesHeader);
+      cookiesWrapper.appendChild(cookiesContent);
+
+      content.appendChild(pagesWrapper);
+      content.appendChild(cookiesWrapper);
 
       domainBlock.appendChild(header);
       domainBlock.appendChild(content);
