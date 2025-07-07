@@ -22,7 +22,8 @@
     "webRequest"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+      "*://*/*"
   ],
   "icons": {
     "16": "assets/icon.png",
