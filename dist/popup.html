@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cookie Tracker Viewer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      margin: 12px;
+      min-width: 820px;
+      min-height: 350px;
+      background: #f9fafb;
+      color: #333;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-bottom: 12px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .domain-block {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      overflow: hidden;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .domain-header {
+      background: #f3f4f6;
+      padding: 10px 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .domain-header:hover {
+      background: #e5e7eb;
+    }
+
+    .domain-content {
+      padding: 10px 14px;
+      background: #ffffff;
+      font-size: 13px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .sub-section {
+      margin-top: 10px;
+    }
+
+    .sub-header {
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 6px;
+      user-select: none;
+      color: #2563eb;
+    }
+
+    .sub-header:hover {
+      text-decoration: underline;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 4px;
+      word-break: break-word;
+    }
+
+    small {
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <h2>Visited Sites</h2>
+  <div id="site-list">Loading...</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
