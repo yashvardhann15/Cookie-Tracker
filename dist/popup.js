@@ -14,109 +14,109 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    for (const [domain, info] of Object.entries(visitedSites)) {
-      const domainBlock = document.createElement("div");
-      domainBlock.className = "domain-block";
+    let index = 1;
 
-      const header = document.createElement("div");
-      header.className = "domain-header";
-      header.textContent = domain;
+    for (const [hostname, info] of Object.entries(visitedSites)) {
+      const firstPage = info.pages && info.pages.length > 0 ? info.pages[0] : null;
+      const url = firstPage?.url || "#";
 
-      const content = document.createElement("div");
-      content.className = "domain-content hidden";
+      // Site Row
+      const siteRow = document.createElement("div");
+      siteRow.className = "site-row";
 
-      header.addEventListener("click", () => {
-        content.classList.toggle("hidden");
-      });
+      const siteInfo = document.createElement("div");
+      siteInfo.className = "site-info";
 
-      // Pages section
-      const pagesWrapper = document.createElement("div");
-      pagesWrapper.className = "sub-section";
-      const pagesHeader = document.createElement("div");
-      pagesHeader.className = "sub-header";
-      pagesHeader.textContent = "▶ Visited Pages";
+      const serial = document.createElement("span");
+      serial.textContent = `${index++}.`;
 
-      const pagesContent = document.createElement("div");
-      pagesContent.classList.add("hidden");
+      const titleSpan = document.createElement("span");
+      titleSpan.className = "site-title";
+      titleSpan.textContent = hostname;
 
-      pagesContent.innerHTML = "<ul>" +
-        (info.pages || []).map(page =>
-          `<li>${page.url}<br/><small>Last visited: ${new Date(page.lastVisited).toLocaleString()}</small></li>`
-        ).join("") +
-        "</ul>";
+      const link = document.createElement("a");
+      link.href = `https://${hostname}`;
+      link.textContent = "Link";
+      link.className = "site-link";
+      link.target = "_blank";
 
-      pagesHeader.addEventListener("click", () => {
-        pagesContent.classList.toggle("hidden");
-        pagesHeader.textContent = pagesContent.classList.contains("hidden")
-          ? "▶ Visited Pages"
-          : "▼ Visited Pages";
-      });
+      const toggleBtn = document.createElement("button");
+      toggleBtn.className = "toggle-btn";
+      toggleBtn.textContent = "+"; // Initial state
 
-      pagesWrapper.appendChild(pagesHeader);
-      pagesWrapper.appendChild(pagesContent);
+      siteInfo.appendChild(serial);
+      siteInfo.appendChild(titleSpan);
+      siteInfo.appendChild(link);
 
-      // Cookies section
-      const cookiesWrapper = document.createElement("div");
-      cookiesWrapper.className = "sub-section";
-      const cookiesHeader = document.createElement("div");
-      cookiesHeader.className = "sub-header";
-      cookiesHeader.textContent = "Cookies:";
+      siteRow.appendChild(siteInfo);
+      siteRow.appendChild(toggleBtn);
+      siteList.appendChild(siteRow);
 
-      const cookiesContent = document.createElement("div");
-      const cookies = info.cookies || [];
+      // Cookie Table
+      const table = document.createElement("table");
+      table.className = "cookie-table hidden";
 
-      if (cookies.length === 0) {
-        cookiesContent.innerHTML = "<p>No cookies found.</p>";
-      } else {
-        const table = document.createElement("table");
-        table.className = "cookie-table";
-
-        const thead = document.createElement("thead");
-        thead.innerHTML = `
+      const thead = `
+        <thead>
           <tr>
+            <th>#</th>
             <th>Cookie Name</th>
-            <th>Domain</th>
+            <th>Cookie Domain</th>
             <th>Expiry Date</th>
             <th>Description</th>
             <th>Value</th>
-          </tr>`;
-        table.appendChild(thead);
+          </tr>
+        </thead>`;
+      const tbody = document.createElement("tbody");
 
-        const tbody = document.createElement("tbody");
+      (info.cookies || []).forEach((cookie, i) => {
+        const expires = cookie.expirationDate
+          ? new Date(cookie.expirationDate * 1000).toLocaleString()
+          : "Session";
 
-        cookies.forEach((c) => {
-          const tr = document.createElement("tr");
-          const expiry = c.expirationDate
-            ? new Date(c.expirationDate * 1000).toLocaleString()
-            : "Session";
+        const row = document.createElement("tr");
 
-          const safeValue = (c.value || "").length > 30
-            ? `${c.value.slice(0, 30)}...`
-            : c.value;
+        row.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${cookie.name}</td>
+          <td>${cookie.domain}</td>
+          <td>${expires}</td>
+          <td>Default description</td>
+        `;
 
-          tr.innerHTML = `
-            <td>${c.name}</td>
-            <td>${c.domain}</td>
-            <td>${expiry}</td>
-            <td><i>Not classified</i></td>
-            <td title="${c.value}">${safeValue}</td>
-          `;
-          tbody.appendChild(tr);
+        const valueCell = document.createElement("td");
+        const previewSpan = document.createElement("span");
+        previewSpan.className = "cookie-value";
+        previewSpan.title = cookie.value;
+        previewSpan.textContent =
+          cookie.value.length > 30 ? cookie.value.slice(0, 30) + "…" : cookie.value;
+
+        const copyBtn = document.createElement("button");
+        copyBtn.className = "copy-btn";
+        copyBtn.textContent = "Copy";
+        copyBtn.addEventListener("click", () => {
+          navigator.clipboard.writeText(cookie.value).then(() => {
+            copyBtn.textContent = "Copied!";
+            setTimeout(() => (copyBtn.textContent = "Copy"), 1000);
+          });
         });
 
-        table.appendChild(tbody);
-        cookiesContent.innerHTML = "";
-        cookiesContent.appendChild(table);
-      }
+        valueCell.appendChild(previewSpan);
+        valueCell.appendChild(copyBtn);
+        row.appendChild(valueCell);
 
-      cookiesWrapper.appendChild(cookiesHeader);
-      cookiesWrapper.appendChild(cookiesContent);
+        tbody.appendChild(row);
+      });
 
-      content.appendChild(pagesWrapper);
-      content.appendChild(cookiesWrapper);
-      domainBlock.appendChild(header);
-      domainBlock.appendChild(content);
-      siteList.appendChild(domainBlock);
+      table.innerHTML = thead;
+      table.appendChild(tbody);
+      siteList.appendChild(table);
+
+      // Toggle logic
+      toggleBtn.addEventListener("click", () => {
+        const isHidden = table.classList.toggle("hidden");
+        toggleBtn.textContent = isHidden ? "+" : "−";
+      });
     }
   });
 });
