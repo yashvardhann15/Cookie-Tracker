@@ -1,32 +1,56 @@
 document.addEventListener("DOMContentLoaded", () => {
   const siteList = document.getElementById("site-list");
+  const searchInput = document.getElementById("search-input");
+  const prevBtn = document.getElementById("prev-btn");
+  const nextBtn = document.getElementById("next-btn");
+  const pageInfo = document.getElementById("page-info");
+
+  const PAGE_SIZE = 12;
+  let visitedSites = {};
+  let filteredHostnames = [];
+  let currentPage = 1;
 
   chrome.storage.local.get("visitedSites", (result) => {
-    const visitedSites = result.visitedSites || {};
+    visitedSites = result.visitedSites || {};
+    filteredHostnames = Object.keys(visitedSites);
+    render();
+  });
+
+  function render() {
     siteList.innerHTML = "";
 
-    if (Object.keys(visitedSites).length === 0) {
+    if (filteredHostnames.length === 0) {
       siteList.textContent = "No data available.";
+      pageInfo.textContent = "";
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
       return;
     }
 
-    let index = 1;
+    const totalPages = Math.ceil(filteredHostnames.length / PAGE_SIZE);
+    currentPage = Math.min(currentPage, totalPages);
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+    const hostnamesToRender = filteredHostnames.slice(start, end);
 
-    for (const [hostname, info] of Object.entries(visitedSites)) {
+    pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+    prevBtn.disabled = currentPage === 1;
+    nextBtn.disabled = currentPage === totalPages;
+
+    let index = start + 1;
+
+    for (const hostname of hostnamesToRender) {
+      const info = visitedSites[hostname];
       const firstPage = info.pages && info.pages.length > 0 ? info.pages[0] : null;
-      const url = firstPage?.url || "#";
 
-      // Site Row
       const siteRow = document.createElement("div");
       siteRow.className = "site-row";
 
-      const siteInfo = document.createElement("div");
-      siteInfo.className = "site-info";
-
-      const serial = document.createElement("span");
+      const serial = document.createElement("div");
+      serial.className = "serial";
       serial.textContent = `${index++}.`;
 
-      const titleSpan = document.createElement("span");
+      const titleSpan = document.createElement("div");
       titleSpan.className = "site-title";
       titleSpan.textContent = hostname;
 
@@ -38,13 +62,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const toggleBtn = document.createElement("button");
       toggleBtn.className = "toggle-btn";
-      toggleBtn.textContent = "+"; // Initial state
+      toggleBtn.textContent = "+";
 
-      siteInfo.appendChild(serial);
-      siteInfo.appendChild(titleSpan);
-      siteInfo.appendChild(link);
-
-      siteRow.appendChild(siteInfo);
+      siteRow.appendChild(serial);
+      siteRow.appendChild(titleSpan);
+      siteRow.appendChild(link);
       siteRow.appendChild(toggleBtn);
       siteList.appendChild(siteRow);
 
@@ -110,11 +132,34 @@ document.addEventListener("DOMContentLoaded", () => {
       table.appendChild(tbody);
       siteList.appendChild(table);
 
-      // Toggle logic
       toggleBtn.addEventListener("click", () => {
         const isHidden = table.classList.toggle("hidden");
         toggleBtn.textContent = isHidden ? "+" : "−";
       });
+    }
+  }
+
+  searchInput.addEventListener("input", () => {
+    const query = searchInput.value.trim().toLowerCase();
+    filteredHostnames = Object.keys(visitedSites).filter(host =>
+      host.toLowerCase().includes(query)
+    );
+    currentPage = 1;
+    render();
+  });
+
+  prevBtn.addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage--;
+      render();
+    }
+  });
+
+  nextBtn.addEventListener("click", () => {
+    const totalPages = Math.ceil(filteredHostnames.length / PAGE_SIZE);
+    if (currentPage < totalPages) {
+      currentPage++;
+      render();
     }
   });
 });

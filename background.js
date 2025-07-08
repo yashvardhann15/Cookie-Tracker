@@ -28,7 +28,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
       visitedSites[hostname].pages = pages;
 
-      // Get all cookies visible on the page (including 3rd-party cookies)
       chrome.cookies.getAll({ url: tab.url }, (cookies) => {
         const existingCookies = visitedSites[hostname].cookies || [];
 
